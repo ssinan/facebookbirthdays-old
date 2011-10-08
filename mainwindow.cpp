@@ -134,4 +134,6 @@ void MainWindow::handleResponse(QNetworkReply *reply)
     {
         qDebug() << reply->readAll();
     }
+    // https://graph.facebook.com/539123475?access_token=375162172308%7C2.AQB1WTIXLrIvKLhr.86400.1318201200.3-576754183%7C_NT1OEMlx8PMKHqpn5d7kLtVu2Y
+    // to get birthday of a friend
 }
