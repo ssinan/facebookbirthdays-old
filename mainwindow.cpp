@@ -124,7 +124,7 @@ void MainWindow::handleFacebookResponse(bool isOk)
 
 void MainWindow::getBirthdays()
 {
-    QUrl url("https://graph.facebook.com/me?access_token=" + access_token);
+    QUrl url("https://graph.facebook.com/me/friends?access_token=" + access_token);
     networkManager->get(QNetworkRequest(url));
 }
 
