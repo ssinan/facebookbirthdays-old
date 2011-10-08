@@ -8,6 +8,9 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    networkManager = new QNetworkAccessManager(this);
+    connect(networkManager, SIGNAL(finished(QNetworkReply*)),
+            this, SLOT(handleResponse(QNetworkReply*)));
     connect(ui->connectWithFacebookButton, SIGNAL(clicked()),
             this, SLOT(connectWithFacebook()));
 }
@@ -15,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete networkManager;
 }
 
 void MainWindow::setOrientation(ScreenOrientation orientation)
@@ -75,7 +79,7 @@ void MainWindow::connectWithFacebook()
 {
     qDebug() << "connectWithFacebook button pressed!!";
     facebookDialog = new QWebView(this);
-    facebookDialog->load(QUrl("https://www.facebook.com/dialog/oauth?client_id=375162172308&redirect_uri=https://www.facebook.com/connect/login_success.html&display=touch"));
+    facebookDialog->load(QUrl("https://www.facebook.com/dialog/oauth?client_id=375162172308&redirect_uri=https://www.facebook.com/connect/login_success.html&display=touch&scope=friends_birthday,friends_groups&response_type=token"));
     connect(facebookDialog, SIGNAL(loadFinished(bool)), this, SLOT(openFacebookDialog(bool)));
 }
 
@@ -84,26 +88,50 @@ void MainWindow::openFacebookDialog(bool isOk)
     if (isOk) {
         ui->verticalLayout->addWidget(facebookDialog);
         disconnect(facebookDialog, SIGNAL(loadFinished(bool)), this, SLOT(openFacebookDialog(bool)));
-        connect(facebookDialog, SIGNAL(loadFinished(bool)), this, SLOT(handleResponse(bool)));
+        connect(facebookDialog, SIGNAL(loadFinished(bool)), this, SLOT(handleFacebookResponse(bool)));
     } else {
         qDebug() << "an error occured!!";
     }
 }
 
-void MainWindow::handleResponse(bool isOk)
+void MainWindow::handleFacebookResponse(bool isOk)
 {
     if (isOk) {
         if (facebookDialog->url().toString().startsWith("https://www.facebook.com/connect/login_success.html")) {
             QString url = facebookDialog->url().toString();
             int length = url.length();
-            int index = QString("https://www.facebook.com/connect/login_success.html?code=").size();
-            QString code = facebookDialog->url().toString().right(length - index);
-            // request auth token
-            // authRequest = new QNetworkRequest(QUrl("https://graph.facebook.com/oauth/access_token?client_id=375162172308&redirect_uri=YOUR_URL&client_secret=f1d1a539b62dc2a490a3bfc3547eab19&code=THE_CODE_FROM_ABOVE"));
-
-            qDebug() << "length: " << length << " index: " << index << " code: " << code;
+            int index = QString("https://www.facebook.com/connect/login_success.html?").size();
+            QString response = facebookDialog->url().toString().right(length - index);
+            qDebug() << "response: " << response;
+            foreach(QString s, response.split('&')) {
+                if(s.startsWith("access_token")) {
+                    access_token = s.mid(QString("access_token=").size(), s.size());
+                }
+            }
+            qDebug() << "access_token: " << access_token;
+            // remove facebookDialog from layout since we have access token now
+            if (!access_token.isEmpty()) {
+                disconnect(facebookDialog, SIGNAL(loadFinished(bool)), this, SLOT(handleFacebookResponse(bool)));
+                ui->verticalLayout->removeWidget(facebookDialog);
+                delete facebookDialog;
+                getBirthdays();
+            }
         }
     } else {
         qDebug() << "an error occured!!";
+    }
+}
+
+void MainWindow::getBirthdays()
+{
+    QUrl url("https://graph.facebook.com/me?access_token=" + access_token);
+    networkManager->get(QNetworkRequest(url));
+}
+
+void MainWindow::handleResponse(QNetworkReply *reply)
+{
+    if (reply->error() == QNetworkReply::NoError)
+    {
+        qDebug() << reply->readAll();
     }
 }

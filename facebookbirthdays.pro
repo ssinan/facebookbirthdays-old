@@ -4,7 +4,7 @@
 # dir1.source = mydir
 DEPLOYMENTFOLDERS = # file1 dir1
 
-QT += webkit
+QT += webkit network
 symbian:TARGET.UID3 = 0xE154EA85
 
 # Smart Installer package's UID

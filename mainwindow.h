@@ -3,7 +3,9 @@
 
 #include <QtGui/QMainWindow>
 #include <QtWebKit/QWebView>
+#include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkRequest>
+#include <QtNetwork/QNetworkReply>
 
 namespace Ui {
     class MainWindow;
@@ -30,12 +32,16 @@ public:
 private slots:
     void connectWithFacebook();
     void openFacebookDialog(bool);
-    void handleResponse(bool);
+    void handleFacebookResponse(bool);
+    void handleResponse(QNetworkReply*);
 
 private:
     Ui::MainWindow *ui;
     QWebView *facebookDialog;
-    QNetworkRequest *authRequest;
+    QNetworkAccessManager *networkManager;
+    QString access_token;
+
+    void getBirthdays();
 };
 
 #endif // MAINWINDOW_H
