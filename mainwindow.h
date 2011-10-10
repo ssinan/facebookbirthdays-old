@@ -6,6 +6,8 @@
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkRequest>
 #include <QtNetwork/QNetworkReply>
+#include <QTextEdit>
+#include <QLabel>
 
 namespace Ui {
     class MainWindow;
@@ -37,7 +39,9 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    QWebView *facebookDialog;
+    QWebView* facebookDialog;
+    QLabel* label;
+    QTextEdit* textWindow;
     QNetworkAccessManager *networkManager;
     QString access_token;
 
